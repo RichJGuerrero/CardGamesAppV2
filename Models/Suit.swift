@@ -1,19 +1,21 @@
-// Suit.swift
-
+import Foundation
 import SwiftUI
 
 enum Suit: String, CaseIterable {
-    case hearts   = "♥️"
-    case diamonds = "♦️"
-    case clubs    = "♣️"
-    case spades   = "♠️"
-    
-    /// Color helper if you ever want it in views.
+    case hearts = "♥"
+    case diamonds = "♦"
+    case clubs = "♣"
+    case spades = "♠"
+
+    var symbol: String {
+        return self.rawValue
+    }
+
     var color: Color {
         switch self {
         case .hearts, .diamonds:
             return .red
-        case .clubs, .spades:
+        default:
             return .black
         }
     }

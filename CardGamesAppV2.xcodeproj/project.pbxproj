@@ -7,12 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		464744FF2ED5AE0900C9CE79 /* BlackjackGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 464744FE2ED5AE0900C9CE79 /* BlackjackGame.swift */; };
 		467740F92ED1A7820003ED0D /* PlayingCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 467740F82ED1A7820003ED0D /* PlayingCardView.swift */; };
 		46FB537D2ED03F540049344D /* Suit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46FB537C2ED03F540049344D /* Suit.swift */; };
 		46FB537F2ED040ED0049344D /* Rank.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46FB537E2ED040ED0049344D /* Rank.swift */; };
 		46FB53812ED0417C0049344D /* Card.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46FB53802ED0417C0049344D /* Card.swift */; };
 		46FB53832ED041D50049344D /* Deck.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46FB53822ED041D50049344D /* Deck.swift */; };
-		46FB53852ED042170049344D /* Hand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46FB53842ED042170049344D /* Hand.swift */; };
 		46FB53872ED0428A0049344D /* BlackjackViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46FB53862ED0428A0049344D /* BlackjackViewModel.swift */; };
 		46FB53892ED043130049344D /* SolitaireViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46FB53882ED043130049344D /* SolitaireViewModel.swift */; };
 		46FB538B2ED043790049344D /* GameType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46FB538A2ED043790049344D /* GameType.swift */; };
@@ -24,13 +24,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		464744FE2ED5AE0900C9CE79 /* BlackjackGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlackjackGame.swift; sourceTree = "<group>"; };
 		467740F82ED1A7820003ED0D /* PlayingCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayingCardView.swift; sourceTree = "<group>"; };
 		46FB53642ED03ADD0049344D /* CardGamesAppV2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CardGamesAppV2.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		46FB537C2ED03F540049344D /* Suit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Suit.swift; sourceTree = "<group>"; };
 		46FB537E2ED040ED0049344D /* Rank.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Rank.swift; sourceTree = "<group>"; };
 		46FB53802ED0417C0049344D /* Card.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Card.swift; sourceTree = "<group>"; };
 		46FB53822ED041D50049344D /* Deck.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Deck.swift; sourceTree = "<group>"; };
-		46FB53842ED042170049344D /* Hand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hand.swift; sourceTree = "<group>"; };
 		46FB53862ED0428A0049344D /* BlackjackViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlackjackViewModel.swift; sourceTree = "<group>"; };
 		46FB53882ED043130049344D /* SolitaireViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolitaireViewModel.swift; sourceTree = "<group>"; };
 		46FB538A2ED043790049344D /* GameType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameType.swift; sourceTree = "<group>"; };
@@ -95,7 +95,7 @@
 				46FB537E2ED040ED0049344D /* Rank.swift */,
 				46FB53802ED0417C0049344D /* Card.swift */,
 				46FB53822ED041D50049344D /* Deck.swift */,
-				46FB53842ED042170049344D /* Hand.swift */,
+				464744FE2ED5AE0900C9CE79 /* BlackjackGame.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -238,11 +238,11 @@
 				46FB537F2ED040ED0049344D /* Rank.swift in Sources */,
 				46FB53812ED0417C0049344D /* Card.swift in Sources */,
 				46FB53942ED0460E0049344D /* BlackjackView.swift in Sources */,
-				46FB53852ED042170049344D /* Hand.swift in Sources */,
 				46FB53872ED0428A0049344D /* BlackjackViewModel.swift in Sources */,
 				46FB53912ED044DF0049344D /* MainMenuView.swift in Sources */,
 				46FB537D2ED03F540049344D /* Suit.swift in Sources */,
 				46FB538D2ED043E80049344D /* Extensions.swift in Sources */,
+				464744FF2ED5AE0900C9CE79 /* BlackjackGame.swift in Sources */,
 				467740F92ED1A7820003ED0D /* PlayingCardView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

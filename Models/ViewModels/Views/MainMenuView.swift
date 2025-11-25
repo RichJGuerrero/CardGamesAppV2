@@ -40,7 +40,7 @@ struct MainMenuView: View {
             .navigationDestination(for: GameType.self) { gameType in
                 switch gameType {
                 case .blackjack:
-                    BlackjackView()
+                    BlackjackView(viewModel: BlackjackViewModel())
                 case .solitaire:
                     SolitaireView()
                 case .poker:

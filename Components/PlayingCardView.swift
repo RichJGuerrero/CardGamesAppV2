@@ -1,75 +1,45 @@
 import SwiftUI
 
 struct PlayingCardView: View {
-    let rank: Rank
-    let suit: Suit
-    
-    private var suitColor: Color {
-        switch suit {
-        case .hearts, .diamonds:
-            return .red
-        default:
-            return .black
-        }
+    let card: Card
+
+    private var foregroundColor: Color {
+        // assuming Suit has a `color` property like `.red` / `.black`
+        card.suit.color == .red ? .red : .black
     }
-    
+
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color.white)
                 .shadow(radius: 4)
 
-            VStack(spacing: 0) {
-                
-                // HEADER CORNER RANK/SUIT
+            VStack {
                 HStack {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(rank.rawValue)
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(suitColor)
-                            .minimumScaleFactor(0.1)
-                            .lineLimit(1)
-                        
-                        Text(suit.rawValue)
-                            .font(.system(size: 18))
-                            .minimumScaleFactor(0.1)
-                            .lineLimit(1)
-                    }
+                    Text(card.rank.displayName)
+                        .font(.headline)
+                        .foregroundColor(foregroundColor)
                     Spacer()
+                    Text(card.suit.symbol)
+                        .font(.headline)
+                        .foregroundColor(foregroundColor)
                 }
-                
                 Spacer()
-                
-                // CENTER SUIT
-                Text(suit.rawValue)
-                    .font(.system(size: 36))
-                    .minimumScaleFactor(0.1)
-                    .lineLimit(1)
-                
+                Text(card.suit.symbol)
+                    .font(.largeTitle)
+                    .foregroundColor(foregroundColor)
                 Spacer()
-                
-                // BOTTOM-RIGHT RANK/SUIT
                 HStack {
+                    Text(card.suit.symbol)
+                        .font(.headline)
+                        .foregroundColor(foregroundColor)
                     Spacer()
-                    VStack(alignment: .trailing, spacing: 0) {
-                        Text(rank.rawValue)
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(suitColor)
-                            .minimumScaleFactor(0.1)
-                            .lineLimit(1)
-                        
-                        Text(suit.rawValue)
-                            .font(.system(size: 18))
-                            .minimumScaleFactor(0.1)
-                            .lineLimit(1)
-                    }
+                    Text(card.rank.displayName)
+                        .font(.headline)
+                        .foregroundColor(foregroundColor)
                 }
             }
-            .padding(6)
+            .padding(8)
         }
-        .frame(width: 70, height: 100)          // Hard limit
-        .contentShape(Rectangle())
-        .clipped()                              // Prevent expansion
-        .fixedSize()                            // Prevent flexible expansion
     }
 }
