@@ -1,22 +1,17 @@
 import Foundation
-import SwiftUI
 
-enum Suit: String, CaseIterable {
-    case hearts = "♥"
-    case diamonds = "♦"
-    case clubs = "♣"
-    case spades = "♠"
+enum Suit: String, CaseIterable, Codable {
+    case hearts = "♥️"
+    case diamonds = "♦️"
+    case clubs = "♣️"
+    case spades = "♠️"
 
-    var symbol: String {
-        return self.rawValue
-    }
+    var symbol: String { rawValue }
+}
 
-    var color: Color {
-        switch self {
-        case .hearts, .diamonds:
-            return .red
-        default:
-            return .black
-        }
+// MARK: - Premium Deck Helper
+extension Suit {
+    var isRed: Bool {
+        return self == .hearts || self == .diamonds
     }
 }

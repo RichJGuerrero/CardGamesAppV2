@@ -1,18 +1,18 @@
-//
-//  CardGamesAppV2App.swift
-//  CardGamesAppV2
-//
-//  Created by user286840 on 11/20/25.
-//
-
 import SwiftUI
 
 @main
 struct CardGamesAppV2App: App {
     var body: some Scene {
         WindowGroup {
-            MainMenuView()
+            NavigationStack {
+                MainMenuView()
+                    .navigationDestination(for: GameType.self) { game in
+                        switch game {
+                        case .blackjack:
+                            BlackjackView(viewModel: BlackjackViewModel())
+                        }
+                    }
+            }
         }
     }
 }
-
