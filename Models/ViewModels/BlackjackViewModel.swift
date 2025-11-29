@@ -1,164 +1,160 @@
-import Foundation
-import SwiftUI
+//  BlackjackViewModel.swift
+//  CardGamesAppV2
 
-class BlackjackViewModel: ObservableObject {
+import Foundation
+
+final class BlackjackViewModel: ObservableObject {
+
+    // MARK: - Published State
 
     @Published var playerHand: [Card] = []
     @Published var dealerHand: [Card] = []
-    @Published var deck: [Card] = []
 
     @Published var result: GameResult = .none
-    @Published var isPlayerTurn: Bool = true
 
-    // Animation flags
-    @Published var showWinAnimation = false
-    @Published var showLoseAnimation = false
+    @Published var showWinAnimation: Bool = false
+    @Published var showLoseAnimation: Bool = false
+
+    @Published var isRoundActive: Bool = true
+
+    // MARK: - Private State
+
+    private var deck = Deck()
+
+    // MARK: - Init
 
     init() {
         newRound()
     }
 
-    // MARK: - Start New Round
+    // MARK: - Public API
+
     func newRound() {
-        deck = Deck.standard52().shuffled()
+        // Reset deck & hands
+        deck.reset()
+        deck.shuffle()
 
-        playerHand = []
-        dealerHand = []
+        playerHand.removeAll()
+        dealerHand.removeAll()
+
         result = .none
-        isPlayerTurn = true
-
         showWinAnimation = false
         showLoseAnimation = false
+        isRoundActive = true
 
-        // Deal 2 cards each
-        playerHand.append(drawCard())
-        playerHand.append(drawCard())
-        dealerHand.append(drawCard())
-        dealerHand.append(drawCard())
-
-        // Check for dealer/player natural blackjack on the initial deal
-        checkForInitialBlackjack()
+        dealInitialCards()
+        evaluateNaturals()
     }
 
-    // MARK: - Player Actions
-
     func hit() {
-        guard isPlayerTurn, result == .none else { return }
+        guard isRoundActive, result == .none else { return }
+        guard let card = deck.draw() else { return }
 
-        playerHand.append(drawCard())
+        playerHand.append(card)
+
         let value = handValue(playerHand)
 
-        // Player hits exactly 21 → stop hitting and let dealer play
-        if value == 21 {
-            isPlayerTurn = false
-            dealerTurn()
-            return
-        }
-
-        // Player busts
         if value > 21 {
-            determineOutcome()
+            // Player busts
+            isRoundActive = false
+            result = .dealerWins
+            showLoseAnimation = true
+        } else if value == 21 {
+            // Non-natural 21 -> auto stand
+            isRoundActive = false
+            dealerPlayAndResolve()
         }
     }
 
     func stand() {
-        guard isPlayerTurn else { return }
+        guard isRoundActive, result == .none else { return }
 
-        isPlayerTurn = false
-        dealerTurn()
+        isRoundActive = false
+        dealerPlayAndResolve()
     }
 
-    // MARK: - Dealer Logic
+    // MARK: - Helpers
 
-    private func dealerTurn() {
-        // Dealer must hit until 17+
+    func handValue(_ hand: [Card]) -> Int {
+        var total = 0
+        var aces = 0
+
+        for card in hand {
+            total += card.rank.blackjackValue
+            if card.rank == .ace { aces += 1 }
+        }
+
+        // Downgrade aces from 11 -> 1 while we’re busting
+        while total > 21 && aces > 0 {
+            total -= 10
+            aces -= 1
+        }
+
+        return total
+    }
+
+    // MARK: - Private Logic
+
+    private func dealInitialCards() {
+        // 2 cards each, alternating
+        if let card1 = deck.draw() { playerHand.append(card1) }
+        if let card2 = deck.draw() { dealerHand.append(card2) }
+        if let card3 = deck.draw() { playerHand.append(card3) }
+        if let card4 = deck.draw() { dealerHand.append(card4) }
+    }
+
+    private func evaluateNaturals() {
+        let playerTotal = handValue(playerHand)
+        let dealerTotal = handValue(dealerHand)
+
+        let playerNatural = playerHand.count == 2 && playerTotal == 21
+        let dealerNatural = dealerHand.count == 2 && dealerTotal == 21
+
+        guard playerNatural || dealerNatural else { return }
+
+        isRoundActive = false
+
+        if playerNatural && dealerNatural {
+            result = .push
+        } else if playerNatural {
+            result = .playerWins
+            showWinAnimation = true
+        } else {
+            result = .dealerWins
+            showLoseAnimation = true
+        }
+    }
+
+    private func dealerPlayAndResolve() {
+        // Dealer draws until 17 or more
         while handValue(dealerHand) < 17 {
-            dealerHand.append(drawCard())
+            guard let card = deck.draw() else { break }
+            dealerHand.append(card)
         }
 
         determineOutcome()
     }
 
-    // MARK: - Draw Card
+    private func determineOutcome() {
+        let playerTotal = handValue(playerHand)
+        let dealerTotal = handValue(dealerHand)
 
-    private func drawCard() -> Card {
-        return deck.removeLast()
-    }
-
-    // MARK: - Hand Value Calculation
-
-    func handValue(_ hand: [Card]) -> Int {
-        // Sum using blackjackValue from Rank.swift
-        var total = hand.reduce(0) { partial, card in
-            partial + card.rank.blackjackValue
-        }
-
-        // Count Aces
-        let aces = hand.filter { $0.rank == .ace }.count
-
-        var adjustedTotal = total
-        var acesToAdjust = aces
-
-        // Reduce Ace from 11 to 1 until no longer busting
-        while adjustedTotal > 21 && acesToAdjust > 0 {
-            adjustedTotal -= 10       // 11 → 1
-            acesToAdjust -= 1
-        }
-
-        return adjustedTotal
-    }
-
-    // MARK: - Initial Blackjack Check (2-card naturals)
-
-    private func hasNaturalBlackjack(_ hand: [Card]) -> Bool {
-        hand.count == 2 && handValue(hand) == 21
-    }
-
-    private func checkForInitialBlackjack() {
-        let playerBJ = hasNaturalBlackjack(playerHand)
-        let dealerBJ = hasNaturalBlackjack(dealerHand)
-
-        guard playerBJ || dealerBJ else {
-            // No naturals, player proceeds as normal
-            return
-        }
-
-        // No more player actions once a natural is found
-        isPlayerTurn = false
-
-        if playerBJ && dealerBJ {
-            result = .push
-        } else if playerBJ {
-            result = .playerWins
-            showWinAnimation = true
-        } else if dealerBJ {
-            result = .dealerWins
-            showLoseAnimation = true
-        }
-    }
-
-    // MARK: - Determine Outcome (non-natural)
-
-    func determineOutcome() {
-        let player = handValue(playerHand)
-        let dealer = handValue(dealerHand)
-
-        if player > 21 {
+        if playerTotal > 21 {
             result = .dealerWins
             showLoseAnimation = true
             return
         }
 
-        if dealer > 21 {
+        if dealerTotal > 21 {
             result = .playerWins
             showWinAnimation = true
             return
         }
 
-        if player > dealer {
+        if playerTotal > dealerTotal {
             result = .playerWins
             showWinAnimation = true
-        } else if dealer > player {
+        } else if dealerTotal > playerTotal {
             result = .dealerWins
             showLoseAnimation = true
         } else {
@@ -166,6 +162,8 @@ class BlackjackViewModel: ObservableObject {
         }
     }
 }
+
+// MARK: - Result Enum
 
 enum GameResult {
     case none

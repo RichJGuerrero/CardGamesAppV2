@@ -1,8 +1,10 @@
-//
-//  CardGamesAppApp.swift
-//  CardGamesAppV2
-//
-//  Created by user286840 on 11/27/25.
-//
+import SwiftUI
 
-import Foundation
+@main
+struct CardGamesAppV2App: App {
+    var body: some Scene {
+        WindowGroup {
+            MainMenuView()
+        }
+    }
+}

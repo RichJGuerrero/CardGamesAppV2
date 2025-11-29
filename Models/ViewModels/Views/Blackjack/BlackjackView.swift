@@ -2,23 +2,22 @@ import SwiftUI
 
 struct BlackjackView: View {
 
-    @StateObject var viewModel: BlackjackViewModel
+    @ObservedObject var viewModel: BlackjackViewModel
 
-    // Local animation states (if you want to use later)
-    @State private var animateWinShimmer = false
+    @State private var revealDealerHoleCard = false
+    @State private var triggerConfetti = false
 
-    // Gold RGB values from MainMenuView.swift
-    private let goldTop     = Color(red: 1.0, green: 0.85, blue: 0.45)
-    private let goldBottom  = Color(red: 0.95, green: 0.65, blue: 0.10)
+    private let goldLight = Color(red: 1.0, green: 0.85, blue: 0.45)
+    private let goldDark  = Color(red: 0.95, green: 0.65, blue: 0.10)
 
     var body: some View {
         ZStack {
 
-            // Casino dark felt background
+            // Background
             LinearGradient(
                 colors: [
                     Color.black,
-                    Color(red: 0.02, green: 0.18, blue: 0.10)
+                    Color(red: 0.0, green: 0.12, blue: 0.08)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
@@ -26,195 +25,192 @@ struct BlackjackView: View {
             .ignoresSafeArea()
 
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: 26) {
 
-                    // Title
+                    // MARK: - Title
                     Text("Blackjack")
                         .font(.system(size: 36, weight: .bold))
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [goldTop, goldBottom],
+                                colors: [goldLight, goldDark],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .padding(.top, 24)
+                        .padding(.top, 30)
 
-                    // Dealer section
+                    // MARK: - Dealer Section
                     VStack(spacing: 8) {
-                        Text("Dealer: \(viewModel.handValue(viewModel.dealerHand))")
-                            .foregroundColor(.white.opacity(0.9))
+                        Text("Dealer: \(dealerLabel)")
+                            .foregroundColor(.white.opacity(0.85))
 
-                        handRow(viewModel.dealerHand, isPlayer: false)
+                        handRow(
+                            cards: viewModel.dealerHand,
+                            hideHoleCard: !revealDealerHoleCard
+                        )
                     }
 
-                    // Player section
+                    // MARK: - Player Section
                     VStack(spacing: 8) {
                         Text("Player: \(viewModel.handValue(viewModel.playerHand))")
-                            .foregroundColor(.white.opacity(0.9))
+                            .foregroundColor(.white.opacity(0.85))
 
-                        handRow(viewModel.playerHand, isPlayer: true)
+                        handRow(
+                            cards: viewModel.playerHand,
+                            hideHoleCard: false
+                        )
                     }
 
-                    resultTextSection
+                    // MARK: - Result + Confetti
+                    ZStack {
+                        resultTextSection
 
+                        if triggerConfetti {
+                            GoldConfettiEmitter()
+                                .frame(width: 140, height: 140)
+                                .offset(y: -10)
+                                .allowsHitTesting(false)
+                        }
+                    }
+                    .frame(height: 60) // keeps layout stable so buttons don't move
+
+                    // MARK: - Controls
                     actionButtonsSection
 
-                    Spacer()
+                    Spacer(minLength: 40)
                 }
                 .padding(.horizontal)
             }
         }
-        // 🔑 Inject the view model so the modifiers using @EnvironmentObject can see it
-        .environmentObject(viewModel)
-    }
-
-    // MARK: - Card Row
-    @ViewBuilder
-    private func handRow(_ cards: [Card], isPlayer: Bool) -> some View {
-        HStack(spacing: adjustedSpacing(for: cards.count)) {
-            ForEach(cards.indices, id: \.self) { index in
-                PlayingCardView(card: cards[index])
-                    .frame(width: 70, height: 100)
-            }
+        .onAppear {
+            revealDealerHoleCard = false
         }
-        .padding(.top, 4)
-        .modifier(winShimmerModifier(isPlayer: isPlayer))
-        .modifier(loseShakeModifier(isPlayer: isPlayer))
+        .onChange(of: viewModel.result) { _, newValue in
+            handleResultChange(newValue)
+        }
     }
 
-    private func adjustedSpacing(for count: Int) -> CGFloat {
-        count <= 4 ? 12 : max(4, 12 - CGFloat(count * 1))
+    // MARK: - Dealer Label Logic
+
+    private var dealerLabel: String {
+        if revealDealerHoleCard {
+            return "\(viewModel.handValue(viewModel.dealerHand))"
+        }
+        if let first = viewModel.dealerHand.first {
+            let visible = viewModel.handValue([first])
+            return "\(visible) + ?"
+        }
+        return "?"
+    }
+
+    // MARK: - Card Row (original sizing & overlap behavior)
+
+    @ViewBuilder
+    private func handRow(cards: [Card], hideHoleCard: Bool) -> some View {
+        GeometryReader { geo in
+            let maxWidth = geo.size.width
+            let usableWidth = maxWidth - 24
+
+            // Original style card sizing
+            let baseCardWidth = min(90, usableWidth / 4.2)
+            let aspect: CGFloat = 1.45
+            let cardWidth = baseCardWidth
+            let cardHeight = baseCardWidth * aspect
+
+            let count = cards.count
+            let overlapStart = 5
+            let shouldOverlap = count >= overlapStart
+
+            let normalSpacing: CGFloat = 12
+            let overlapSpacing: CGFloat = -cardWidth * 0.35
+            let spacing = shouldOverlap ? overlapSpacing : normalSpacing
+
+            HStack(spacing: spacing) {
+                ForEach(Array(cards.enumerated()), id: \.offset) { index, card in
+                    PlayingCardView(
+                        card: card,
+                        isFaceDown: hideHoleCard && index == 1
+                    )
+                    .frame(width: cardWidth, height: cardHeight)
+                    .zIndex(Double(index))
+                }
+            }
+            .frame(width: maxWidth, height: cardHeight, alignment: .center)
+        }
+        .frame(height: 150)
     }
 
     // MARK: - Result Text
+
     @ViewBuilder
     private var resultTextSection: some View {
         switch viewModel.result {
+
         case .playerWins:
             Text("You win!")
                 .font(.title2.bold())
-                .foregroundStyle(goldTop)
-                .scaleEffect(viewModel.showWinAnimation ? 1.12 : 1.0)
-                .shadow(color: goldTop.opacity(0.8), radius: 12)
-                .animation(.spring(response: 0.4, dampingFraction: 0.5),
-                           value: viewModel.showWinAnimation)
+                .foregroundColor(goldLight)
+                .shadow(color: goldLight.opacity(0.9), radius: 10)
 
         case .dealerWins:
-            Text("You busted.")
-                .font(.title3.bold())
-                .foregroundColor(.red)
-                .offset(y: viewModel.showLoseAnimation ? 8 : -8)
-                .opacity(viewModel.showLoseAnimation ? 1 : 0)
-                .animation(.easeOut(duration: 0.45),
-                           value: viewModel.showLoseAnimation)
+            Text("Dealer wins")
+                .font(.title2.bold())
+                .foregroundColor(.red.opacity(0.9))
 
         case .push:
-            Text("Push.")
-                .foregroundColor(.white.opacity(0.7))
+            Text("Push")
+                .font(.title2.bold())
+                .foregroundColor(.white.opacity(0.9))
 
         default:
             EmptyView()
         }
     }
 
-    // MARK: - Action Buttons
-    @ViewBuilder
+    // MARK: - Controls
+
     private var actionButtonsSection: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 16) {
 
-            HStack(spacing: 20) {
-
-                // Hit
+            HStack(spacing: 24) {
                 Button("Hit") {
                     viewModel.hit()
                 }
                 .buttonStyle(GoldButtonStyle())
-                .disabled(viewModel.result != .none)
 
-                // Stand
                 Button("Stand") {
                     viewModel.stand()
                 }
                 .buttonStyle(GoldButtonStyle(outlined: true))
-                .disabled(viewModel.result != .none)
             }
 
-            // New Round
             Button("New Round") {
+                triggerConfetti = false
+                revealDealerHoleCard = false
                 viewModel.newRound()
             }
             .buttonStyle(GoldButtonStyle())
         }
     }
-}
 
-// MARK: - Win Shimmer
-struct winShimmerModifier: ViewModifier {
+    // MARK: - Result Handling
 
-    @EnvironmentObject var vm: BlackjackViewModel
-    var isPlayer: Bool
-    @State private var animate = false
+    private func handleResultChange(_ result: GameResult) {
 
-    func body(content: Content) -> some View {
-        content
-            .overlay(
-                Group {
-                    if isPlayer && vm.showWinAnimation {
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.0),
-                                Color.yellow.opacity(0.35),
-                                Color.white.opacity(0.0)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                        .mask(
-                            Rectangle()
-                                .rotationEffect(.degrees(25))
-                                .offset(x: animate ? 200 : -200)
-                        )
-                        .onAppear {
-                            withAnimation(.easeOut(duration: 0.9)) {
-                                animate = true
-                            }
-                        }
-                    }
-                }
-            )
-    }
-}
+        // Reveal dealer hole card as soon as round is decided
+        if result != .none {
+            withAnimation(.easeInOut(duration: 0.4)) {
+                revealDealerHoleCard = true
+            }
+        }
 
-// MARK: - Lose Shake
-struct loseShakeModifier: ViewModifier {
+        // Confetti only on player win
+        if result == .playerWins {
+            triggerConfetti = true
 
-    @EnvironmentObject var vm: BlackjackViewModel
-    var isPlayer: Bool
-
-    func body(content: Content) -> some View {
-        content
-            .modifier(
-                ShakeEffect(times: vm.showLoseAnimation && isPlayer ? 3 : 0)
-            )
-    }
-}
-
-// MARK: - Shake Effect
-struct ShakeEffect: GeometryEffect {
-    var times: CGFloat
-    var amount: CGFloat = 8
-    var animatableData: CGFloat
-
-    init(times: CGFloat) {
-        self.times = times
-        self.animatableData = times
-    }
-
-    func effectValue(size: CGSize) -> ProjectionTransform {
-        let translation = amount * sin(animatableData * .pi * 2)
-        return ProjectionTransform(
-            CGAffineTransform(translationX: translation, y: 0)
-        )
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.3) {
+                triggerConfetti = false
+            }
+        }
     }
 }

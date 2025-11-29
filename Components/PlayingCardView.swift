@@ -3,6 +3,7 @@ import SwiftUI
 struct PlayingCardView: View {
 
     let card: Card
+    var isFaceDown: Bool = false
 
     // MARK: - Premium Color Palette
     private let goldTop = Color(red: 255/255, green: 215/255, blue: 120/255)
@@ -14,60 +15,87 @@ struct PlayingCardView: View {
         card.suit.isRed ? rubyRed : goldBottom
     }
 
-    private var rankColor: Color {
-        card.suit.isRed ? rubyRed : goldTop
-    }
-
     var body: some View {
         ZStack {
-            // Base card face
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [cardFace.opacity(0.98), cardFace.opacity(0.92)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .strokeBorder(
-                            LinearGradient(
-                                colors: [goldTop, goldBottom],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 2
+            if isFaceDown {
+                // Card back (dealer hole card)
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.black,
+                                Color(red: 0.10, green: 0.10, blue: 0.10)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
                         )
-                )
-                .shadow(color: .black.opacity(0.6), radius: 10, x: 0, y: 4)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [goldTop, goldBottom],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 3
+                            )
+                    )
+                    .overlay(
+                        Image(systemName: "star.fill")
+                            .font(.system(size: 22, weight: .bold))
+                            .foregroundColor(goldTop)              // this is the “reference” gold
+                            .shadow(color: goldTop.opacity(0.9), radius: 4)
+                    )
+            } else {
+                // Card face
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [cardFace.opacity(0.98), cardFace.opacity(0.92)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [goldTop, goldBottom],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 3
+                            )
+                    )
+                    .overlay(
+                        VStack(alignment: .leading, spacing: 0) {
+                            // Rank + small pip in top-left
+                            HStack(alignment: .top, spacing: 2) {
+                                Text(card.rank.displayName)
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundColor(card.suit.isRed ? rubyRed : goldTop)
+                                    .shadow(color: goldTop.opacity(0.8), radius: 1) // slim gold outline
 
-            // Content
-            VStack {
-                // Top-left rank + suit
-                HStack(alignment: .top, spacing: 3) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(card.rank.displayName)
-                            .font(.system(size: 20, weight: .semibold, design: .serif))
-                            .foregroundColor(rankColor)
+                                Text(card.suit.symbol)
+                                    .font(.system(size: 14))
+                                    .foregroundColor(pipColor)
+                                    .shadow(color: goldTop.opacity(0.8), radius: 1) // slim gold outline
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.top, 8)
 
-                        Text(card.suit.symbol)
-                            .font(.system(size: 14))
-                            .foregroundColor(pipColor)
-                    }
-                    Spacer()
-                }
-                .padding(.horizontal, 8)
-                .padding(.top, 8)
+                            Spacer()
 
-                Spacer()
+                            // Center pip
+                            Text(card.suit.symbol)
+                                .font(.system(size: 34))
+                                .foregroundColor(pipColor)
+                                .shadow(color: goldTop.opacity(0.9), radius: 1.2) // subtle glow
 
-                // Center pip
-                Text(card.suit.symbol)
-                    .font(.system(size: 34))
-                    .foregroundColor(pipColor)
-
-                Spacer()
+                            Spacer()
+                        }
+                    )
             }
         }
     }
